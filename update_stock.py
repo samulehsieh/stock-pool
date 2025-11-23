@@ -24,8 +24,8 @@ file_path = repo_path / "股票池.csv"
 # -----------------------------
 # 官方 CSV 網址
 # -----------------------------
-URL_TWSE = "https://mops.twse.com.tw/nas/t21/sii/t21sc03_1.csv"
-URL_TPEX = "https://mops.twse.com.tw/nas/t21/t21sc03_2.csv"
+URL_TWSE = "https://mopsfin.twse.com.tw/opendata/t187ap03_L.csv"
+URL_TPEX = "https://mopsfin.twse.com.tw/opendata/t187ap03_O.csv"
 
 # -----------------------------
 # 下載 CSV 函數
