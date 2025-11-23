@@ -2,11 +2,11 @@ name: Update Stock Pool
 
 on:
   schedule:
-    - cron: '30 8 * * 1-5'
-  workflow_dispatch:
+    - cron: '30 8 * * 1-5'  # UTC 08:30 → 台北 16:30
+  workflow_dispatch:  # 手動觸發
 
 permissions:
-  contents: write   # ★ 這行決定能不能 push！
+  contents: write   # ★ 允許 push
 
 jobs:
   update-stock:
@@ -28,9 +28,9 @@ jobs:
       - name: Run update script
         env:
           GMAIL_USER: ${{ secrets.GMAIL_USER }}
-          GMAIL_APP_PASS: ${{ secrets.GMAIL_APP_PASS }}   # ★ 使用 App Password
+          GMAIL_APP_PASS: ${{ secrets.GMAIL_APP_PASS }}
           TO_EMAIL: ${{ secrets.TO_EMAIL }}
-          GITHUB_TOKEN: ${{ github.token }} 
+          GITHUB_TOKEN: ${{ github.token }}
         run: python update_stock.py
 
       - name: Commit and push updates
