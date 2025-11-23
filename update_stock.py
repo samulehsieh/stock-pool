@@ -71,8 +71,8 @@ if not df.equals(old_df):
     # 用 git CLI push
     # -----------------------------
     token = os.environ["GITHUB_TOKEN"]
-    repo_url = "https://github.com/samulehsieh/-.git"  # 改成你 repo 名稱
-    repo_url_with_token = f"https://x-access-token:{token}@github.com/samulehsieh/-.git"
+    repo_url = "https://github.com/samulehsieh/stock-pool.git"  # 改成你 repo 名稱
+    repo_url_with_token = f"https://x-access-token:{token}@github.com/samulehsieh/stock-pool.git"
 
     run(["git", "config", "--global", "user.email", "action@github.com"], cwd=repo_path)
     run(["git", "config", "--global", "user.name", "GitHub Action"], cwd=repo_path)
