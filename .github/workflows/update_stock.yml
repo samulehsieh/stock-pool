@@ -1,0 +1,24 @@
+name: Update Stock Pool
+
+on:
+  schedule:
+    - cron: '30 8 * * 1-5'  # 每週一到週五 08:30 UTC (16:30 台北時間)
+  workflow_dispatch:  # 可手動觸發
+
+jobs:
+  update-stock:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install pandas GitPython
+
+      - name: Run update script
+        run: python update_stock.py
