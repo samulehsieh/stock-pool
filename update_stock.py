@@ -4,6 +4,7 @@ import requests
 from io import StringIO
 import smtplib
 from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from datetime import datetime
 import os
 from subprocess import run, PIPE
@@ -15,6 +16,9 @@ GMAIL_USER = os.environ.get("GMAIL_USER")
 GMAIL_PASSWORD = os.environ.get("GMAIL_APP_PASS")
 TO_EMAIL = os.environ.get("TO_EMAIL")
 
+if not GMAIL_USER or not GMAIL_PASSWORD or not TO_EMAIL:
+    raise ValueError("GMAIL_USER, GMAIL_APP_PASS, or TO_EMAIL not set properly")
+
 # -----------------------------
 # Repo 路徑
 # -----------------------------
@@ -22,7 +26,7 @@ repo_path = Path(__file__).parent
 file_path = repo_path / "股票池.csv"
 
 # -----------------------------
-# 你原本的 CSV 網址（保持不動）
+# CSV 資料來源
 # -----------------------------
 URL_TWSE = "https://mopsfin.twse.com.tw/opendata/t187ap03_L.csv"
 URL_TPEX = "https://mopsfin.twse.com.tw/opendata/t187ap03_O.csv"
@@ -35,7 +39,7 @@ def fetch_csv(url):
     r.raise_for_status()
     r.encoding = "utf-8-sig"
     df = pd.read_csv(StringIO(r.text))
-    df.columns = df.columns.str.strip()  # 去掉欄位空白
+    df.columns = df.columns.str.strip()
     return df
 
 twse_df = fetch_csv(URL_TWSE)
@@ -68,10 +72,9 @@ if not df.equals(old_df):
     df.to_csv(file_path, index=False, encoding="utf-8-sig")
 
     # -----------------------------
-    # 用 git CLI push
+    # Git push
     # -----------------------------
     token = os.environ["GITHUB_TOKEN"]
-    repo_url = "https://github.com/samulehsieh/stock-pool.git"  # 改成你 repo 名稱
     repo_url_with_token = f"https://x-access-token:{token}@github.com/samulehsieh/stock-pool.git"
 
     run(["git", "config", "--global", "user.email", "action@github.com"], cwd=repo_path)
@@ -83,19 +86,35 @@ if not df.equals(old_df):
     run(["git", "push", "origin", "HEAD"], cwd=repo_path)
 
     # -----------------------------
-    # Gmail 通知
+    # Gmail 通知 (HTML + Plain Text)
     # -----------------------------
-    content = f"台股股票池變動提醒 ({datetime.now().strftime('%Y-%m-%d')})\n\n"
-    if not new.empty:
-        content += "新增公司：\n" + new.to_string(index=False) + "\n\n"
-    if not removed.empty:
-        content += "移除公司：\n" + removed.to_string(index=False) + "\n\n"
-
-    msg = MIMEText(content)
-    msg["Subject"] = "台股股票池變動通知"
+    msg = MIMEMultipart("alternative")
+    msg["Subject"] = f"📈 台股股票池變動通知 ({datetime.now().strftime('%Y-%m-%d')})"
     msg["From"] = GMAIL_USER
     msg["To"] = TO_EMAIL
 
+    # 純文字版本
+    text = "股票池變動提醒\n\n"
+    if not new.empty:
+        text += "新增公司：\n" + new.to_string(index=False) + "\n\n"
+    if not removed.empty:
+        text += "移除公司：\n" + removed.to_string(index=False) + "\n\n"
+
+    # HTML 版本
+    html = f"""
+    <html>
+      <body>
+        <p>股票池變動提醒</p>
+        {"<p><b>新增公司：</b><br>" + new.to_html(index=False, escape=False) + "</p>" if not new.empty else ""}
+        {"<p><b>移除公司：</b><br>" + removed.to_html(index=False, escape=False) + "</p>" if not removed.empty else ""}
+      </body>
+    </html>
+    """
+
+    msg.attach(MIMEText(text, "plain"))
+    msg.attach(MIMEText(html, "html"))
+
+    # 寄信
     with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
         server.login(GMAIL_USER, GMAIL_PASSWORD)
         server.send_message(msg)
