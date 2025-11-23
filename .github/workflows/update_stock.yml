@@ -28,7 +28,7 @@ jobs:
       - name: Run update script
         env:
           GMAIL_USER: ${{ secrets.GMAIL_USER }}
-          GMAIL_PASSWORD: ${{ secrets.GMAIL_APP_PASS }}   # ★ 使用 App Password
+          GMAIL_APP_PASS: ${{ secrets.GMAIL_APP_PASS }}   # ★ 使用 App Password
           TO_EMAIL: ${{ secrets.TO_EMAIL }}
           GITHUB_TOKEN: ${{ github.token }} 
         run: python update_stock.py
