@@ -22,19 +22,21 @@ repo_path = Path(__file__).parent
 file_path = repo_path / "股票池.csv"
 
 # -----------------------------
-# 官方 CSV 網址
+# 你原本的 CSV 網址（保持不動）
 # -----------------------------
 URL_TWSE = "https://mopsfin.twse.com.tw/opendata/t187ap03_L.csv"
 URL_TPEX = "https://mopsfin.twse.com.tw/opendata/t187ap03_O.csv"
 
 # -----------------------------
-# 下載 CSV 函數
+# 下載 CSV
 # -----------------------------
 def fetch_csv(url):
     r = requests.get(url, timeout=30)
-    r.raise_for_status()  # 若下載失敗會直接報錯
+    r.raise_for_status()
     r.encoding = "utf-8-sig"
-    return pd.read_csv(StringIO(r.text))
+    df = pd.read_csv(StringIO(r.text))
+    df.columns = df.columns.str.strip()  # 去掉欄位空白
+    return df
 
 twse_df = fetch_csv(URL_TWSE)
 tpex_df = fetch_csv(URL_TPEX)
@@ -67,13 +69,16 @@ if not df.equals(old_df):
     repo = Repo(repo_path)
     repo.git.add("股票池.csv")
     repo.index.commit("Update 股票池.csv")
-    origin = repo.remote(name='origin')
-    origin.push()
-    print("股票池.csv 已更新並推送到 GitHub")
 
-    # -----------------------------
-    # 發 Gmail
-    # -----------------------------
+    # 用 GITHUB_TOKEN 安全 push
+    token = os.environ["GITHUB_TOKEN"]
+    remote_url = repo.remotes.origin.url.replace(
+        "https://github.com/", f"https://x-access-token:{token}@github.com/"
+    )
+    repo.remotes.origin.set_url(remote_url)
+    repo.remotes.origin.push()
+
+    # Gmail 通知
     content = f"台股股票池變動提醒 ({datetime.now().strftime('%Y-%m-%d')})\n\n"
     if not new.empty:
         content += "新增公司：\n" + new.to_string(index=False) + "\n\n"
@@ -89,6 +94,6 @@ if not df.equals(old_df):
         server.login(GMAIL_USER, GMAIL_PASSWORD)
         server.send_message(msg)
 
-    print("Gmail 通知已發送")
+    print("股票池.csv 已更新並推送到 GitHub，Gmail 通知已發送")
 else:
     print("股票池.csv 沒有變動")
