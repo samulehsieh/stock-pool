@@ -9,9 +9,9 @@ import os
 # -----------------------------
 # Gmail 設定
 # -----------------------------
-GMAIL_USER = os.environ.get("samule19991231@gmail.com")          # 在 GitHub Secrets 設定
-GMAIL_PASSWORD = os.environ.get("pvib slis ogua kuf")  # App 密碼
-TO_EMAIL = os.environ.get("samule19991231@gmail.com")              # 收件人
+GMAIL_USER = os.environ.get("GMAIL_USER")          # 在 GitHub Secrets 設定
+GMAIL_PASSWORD = os.environ.get("GMAIL_APP_PASS")  # App 密碼
+TO_EMAIL = os.environ.get("TO_EMAIL")              # 收件人
 
 # -----------------------------
 # Repo 路徑
