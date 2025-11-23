@@ -19,7 +19,8 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: pip install pandas GitPython
+        run: |
+          pip install pandas GitPython requests
 
       - name: Run update script
         env:
