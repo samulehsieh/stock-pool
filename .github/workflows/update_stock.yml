@@ -2,8 +2,11 @@ name: Update Stock Pool
 
 on:
   schedule:
-    - cron: '30 8 * * 1-5'  # UTC 08:30 → 台北 16:30
-  workflow_dispatch:  # 手動觸發
+    - cron: '30 8 * * 1-5'
+  workflow_dispatch:
+
+permissions:
+  contents: write   # ★ 這行決定能不能 push！
 
 jobs:
   update-stock:
@@ -25,7 +28,14 @@ jobs:
       - name: Run update script
         env:
           GMAIL_USER: ${{ secrets.GMAIL_USER }}
-          GMAIL_APP_PASS: ${{ secrets.GMAIL_APP_PASS }}
+          GMAIL_PASSWORD: ${{ secrets.GMAIL_PASSWORD }}   # ★ 使用 App Password
           TO_EMAIL: ${{ secrets.TO_EMAIL }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # 內建 token
         run: python update_stock.py
+
+      - name: Commit and push updates
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "Auto update stock pool" || echo "No changes to commit"
+          git push
